@@ -14,6 +14,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Instructions.txt = Instructions.txt
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjectAPI.Shared", "ProjectAPI.Shared\ProjectAPI.Shared.csproj", "{51A37944-8B93-4B7E-9FF0-B75D2213A0D2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjectAPI.Util", "ProjectAPI.Util\ProjectAPI.Util.csproj", "{45CE5CA4-0371-4FFA-9944-1CB72EB4AC7D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,6 +36,14 @@ Global
 		{6A23F7C5-E3AE-4248-839F-03659C49A2A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6A23F7C5-E3AE-4248-839F-03659C49A2A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6A23F7C5-E3AE-4248-839F-03659C49A2A4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51A37944-8B93-4B7E-9FF0-B75D2213A0D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51A37944-8B93-4B7E-9FF0-B75D2213A0D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51A37944-8B93-4B7E-9FF0-B75D2213A0D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51A37944-8B93-4B7E-9FF0-B75D2213A0D2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{45CE5CA4-0371-4FFA-9944-1CB72EB4AC7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45CE5CA4-0371-4FFA-9944-1CB72EB4AC7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45CE5CA4-0371-4FFA-9944-1CB72EB4AC7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45CE5CA4-0371-4FFA-9944-1CB72EB4AC7D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
