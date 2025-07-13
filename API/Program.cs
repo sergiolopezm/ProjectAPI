@@ -1,49 +1,107 @@
-﻿using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Hosting;
+﻿using API.Attributes;
+using Business;
+using Business.Contracts;
+using DataAccess;
+using DataAccess.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging.Console;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System;
-using System.IO;
+using System.Text;
 
-namespace ProjectAPI.API
-{
-    public class Program
+var builder = WebApplication.CreateBuilder(args);
+
+// Configurar Serilog
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+
+// DbContext
+builder.Services.AddDbContext<JujuTestContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Development")));
+
+// Servicios existentes
+builder.Services.AddScoped<BaseService<DataAccess.Data.Customer>, BaseService<DataAccess.Data.Customer>>();
+builder.Services.AddScoped<BaseModel<DataAccess.Data.Customer>, BaseModel<DataAccess.Data.Customer>>();
+builder.Services.AddScoped<BaseService<DataAccess.Data.Post>, BaseService<DataAccess.Data.Post>>();
+builder.Services.AddScoped<BaseModel<DataAccess.Data.Post>, BaseModel<DataAccess.Data.Post>>();
+
+// Repositorios
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+builder.Services.AddScoped<ITokenRepository, TokenRepository>();
+
+// Attributes
+builder.Services.AddScoped<JwtAuthorizationAttribute>();
+builder.Services.AddScoped<ValidarModeloAttribute>();
+builder.Services.AddScoped<LogAttribute>();
+builder.Services.AddScoped<ExceptionAttribute>();
+
+// JWT Authentication
+var jwtKey = builder.Configuration["JwtSettings:Key"];
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
-        public static IConfiguration Configuration { get; } = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json", optional: true)
-            .Build();
-
-        public static void Main(string[] args)
+        options.TokenValidationParameters = new TokenValidationParameters
         {
-            Log.Logger = new LoggerConfiguration()
-                .ReadFrom.Configuration(Configuration)
-                .CreateLogger();      
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey!)),
+            ValidateIssuer = true,
+            ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+            ValidateAudience = true,
+            ValidAudience = builder.Configuration["JwtSettings:Audience"],
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+    });
 
-            try
-            {
-                Log.Warning("Host starting...");
+// CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigins", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200", "https://localhost:4200")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
 
-                BuildWebHost(args).Run();
-            }
-            catch (Exception ex)
-            {
-                Log.Fatal(ex, "Host terminated unexpectedly");
-            }
-            finally
-            {
-                Log.CloseAndFlush();
-            }
-        }
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
-        public static IWebHost BuildWebHost(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                   .UseStartup<Startup>()
-                   .UseConfiguration(Configuration)
-                   .UseSerilog()
-                   .Build();
+var app = builder.Build();
+
+try
+{
+    Log.Information("Starting web application");
+
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
     }
+
+    app.UseCors("AllowSpecificOrigins");
+    app.UseAuthentication();
+    app.UseAuthorization();
+    app.MapControllers();
+
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
 }

@@ -1,50 +1,84 @@
-﻿using Business;
+﻿using API.Attributes;
+using Business;
+using Business.Contracts;
 using Microsoft.AspNetCore.Mvc;
+using ProjectAPI.Shared.CustomerDTO;
+using ProjectAPI.Shared.GeneralDTO;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using CustomerEntity = DataAccess.Data.Customer;
 
 namespace API.Controllers.Customer
 {
-    [Route("[controller]")]
+    [Route("api/[controller]")]
+    [ApiController]
     public class CustomerController : ControllerBase
     {
-        private BaseService<CustomerEntity> CustomerService;
-        public CustomerController(BaseService<CustomerEntity> customerService)
+        private readonly ICustomerRepository _customerRepository;
+
+        public CustomerController(ICustomerRepository customerRepository)
         {
-            CustomerService = customerService;
+            _customerRepository = customerRepository;
         }
 
-
-        [HttpGet()]
-        public IQueryable<CustomerEntity> GetAll()
+        [HttpGet]
+        [ServiceFilter(typeof(LogAttribute))]
+        public async Task<ActionResult<RespuestaDto>> GetAll()
         {
-            return CustomerService.GetAll();
+            var customers = await _customerRepository.ObtenerTodosAsync();
+            return Ok(RespuestaDto.Exitoso("Customers obtenidos", $"Se obtuvieron {customers.Count} customers", customers));
         }
 
-
-        [HttpPost()]
-        public CustomerEntity Create([FromBodyAttribute] CustomerEntity entity)
+        [HttpGet("{id}")]
+        [ServiceFilter(typeof(LogAttribute))]
+        public async Task<ActionResult<RespuestaDto>> GetById(int id)
         {
-            return CreateCustomer(entity);
+            var customer = await _customerRepository.ObtenerPorIdAsync(id);
+            if (customer == null)
+                return NotFound(RespuestaDto.NoEncontrado("Customer"));
+
+            return Ok(RespuestaDto.Exitoso("Customer encontrado", "Customer obtenido exitosamente", customer));
         }
 
-        private CustomerEntity CreateCustomer(CustomerEntity entity)
+        [HttpPost]
+        [ServiceFilter(typeof(ValidarModeloAttribute))]
+        [ServiceFilter(typeof(LogAttribute))]
+        public async Task<ActionResult<RespuestaDto>> Create([FromBody] CustomerCreateDto customerDto)
         {
-            throw new Exception("");
-            return CustomerService.Create(entity);
+            var resultado = await _customerRepository.CrearAsync(customerDto);
+            if (resultado.Exito)
+                return CreatedAtAction(nameof(GetById), new { id = ((CustomerDto)resultado.Resultado!).CustomerId }, resultado);
+
+            return BadRequest(resultado);
         }
 
-        [HttpPut()]
-        public CustomerEntity Update(CustomerEntity entity)
+        [HttpPut("{id}")]
+        [ServiceFilter(typeof(ValidarModeloAttribute))]
+        [ServiceFilter(typeof(LogAttribute))]
+        public async Task<ActionResult<RespuestaDto>> Update(int id, [FromBody] CustomerUpdateDto customerDto)
         {
-            return CustomerService.Update(entity.CustomerId, entity, out bool changed);
+            if (customerDto.CustomerId != id)
+                return BadRequest(RespuestaDto.ParametrosIncorrectos("ID no coincide", "El ID del customer no coincide"));
+
+            var resultado = await _customerRepository.ActualizarAsync(id, customerDto);
+            return resultado.Exito ? Ok(resultado) : BadRequest(resultado);
         }
 
-        [HttpDelete()]
-        public CustomerEntity Delete([FromBodyAttribute] CustomerEntity entity)
+        [HttpDelete("{id}")]
+        [ServiceFilter(typeof(LogAttribute))]
+        public async Task<ActionResult<RespuestaDto>> Delete(int id)
         {
-            return CustomerService.Delete(entity);
+            var resultado = await _customerRepository.EliminarAsync(id);
+            return resultado.Exito ? Ok(resultado) : BadRequest(resultado);
+        }
+
+        [HttpGet("paginado")]
+        [ServiceFilter(typeof(LogAttribute))]
+        public async Task<ActionResult<RespuestaDto>> GetPaginado([FromQuery] int pagina = 1, [FromQuery] int elementos = 10, [FromQuery] string? busqueda = null)
+        {
+            var resultado = await _customerRepository.ObtenerPaginadoAsync(pagina, elementos, busqueda);
+            return Ok(RespuestaDto.Exitoso("Customers paginados", $"Página {pagina} obtenida", resultado));
         }
     }
 }
