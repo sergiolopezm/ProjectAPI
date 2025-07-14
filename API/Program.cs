@@ -43,6 +43,7 @@ builder.Services.AddScoped<JwtAuthorizationAttribute>();
 builder.Services.AddScoped<ValidarModeloAttribute>();
 builder.Services.AddScoped<LogAttribute>();
 builder.Services.AddScoped<ExceptionAttribute>();
+builder.Services.AddScoped<AccesoAttribute>();
 
 // JWT Authentication
 var jwtKey = builder.Configuration["JwtSettings:Key"];
@@ -76,7 +77,47 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo 
+    { 
+        Title = "API V1", 
+        Version = "v1",
+        Description = "API de la compañía Post Ltda"
+    });
+    
+    // Configuración para documentar los headers requeridos
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "ApiKey"
+                }
+            },
+            new string[] {}
+        }
+    });
+    
+    c.AddSecurityDefinition("ApiKey", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Description = "Headers de autenticación API. Ejemplo: 'Sitio: nombre-sitio' y 'Clave: clave-acceso'",
+        Name = "Sitio, Clave",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey
+    });
+    
+    // Agregar comentarios XML para la documentación de la API
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (System.IO.File.Exists(xmlPath))
+    {
+        c.IncludeXmlComments(xmlPath);
+    }
+});
 
 var app = builder.Build();
 

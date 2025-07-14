@@ -328,3 +328,60 @@ INSERT [dbo].[Post] ([PostId], [Title], [Body], [Type], [Category], [CustomerId]
 GO
 SET IDENTITY_INSERT [dbo].[Post] OFF
 GO
+
+
+
+-- Agregar al script 
+CREATE TABLE [dbo].[Accesos](
+    [Id] [int] IDENTITY(1,1) PRIMARY KEY,
+    [Sitio] [nvarchar](50) NOT NULL,
+    [Contraseña] [nvarchar](250) NOT NULL,
+    [FechaCreacion] [datetime2] NOT NULL DEFAULT GETDATE(),
+    [Activo] [bit] NOT NULL DEFAULT 1
+);
+
+CREATE TABLE [dbo].[Roles](
+    [Id] [int] IDENTITY(1,1) PRIMARY KEY,
+    [Nombre] [nvarchar](50) NOT NULL UNIQUE,
+    [Descripcion] [nvarchar](200) NULL,
+    [FechaCreacion] [datetime2] NOT NULL DEFAULT GETDATE(),
+    [Activo] [bit] NOT NULL DEFAULT 1
+);
+
+CREATE TABLE [dbo].[Usuarios](
+    [Id] [uniqueidentifier] PRIMARY KEY DEFAULT NEWID(),
+    [NombreUsuario] [nvarchar](100) NOT NULL UNIQUE,
+    [Contraseña] [nvarchar](250) NOT NULL,
+    [Nombre] [nvarchar](100) NOT NULL,
+    [Apellido] [nvarchar](100) NOT NULL,
+    [Email] [nvarchar](100) NOT NULL UNIQUE,
+    [RolId] [int] NOT NULL,
+    [Activo] [bit] NOT NULL DEFAULT 1,
+    [FechaCreacion] [datetime2] NOT NULL DEFAULT GETDATE(),
+    [FechaUltimoAcceso] [datetime2] NULL,
+    FOREIGN KEY (RolId) REFERENCES Roles(Id)
+);
+
+CREATE TABLE [dbo].[Tokens](
+    [Id] [uniqueidentifier] PRIMARY KEY DEFAULT NEWID(),
+    [Token] [nvarchar](1000) NOT NULL,
+    [UsuarioId] [uniqueidentifier] NOT NULL,
+    [Ip] [nvarchar](45) NOT NULL,
+    [FechaCreacion] [datetime2] NOT NULL DEFAULT GETDATE(),
+    [FechaExpiracion] [datetime2] NOT NULL,
+    FOREIGN KEY (UsuarioId) REFERENCES Usuarios(Id)
+);
+
+INSERT INTO Accesos (Sitio, Contraseña, FechaCreacion, Activo) 
+VALUES ('ProjectAPI', 'ProjectAPI2024', GETDATE(), 1);
+
+INSERT INTO Roles (Nombre, Descripcion, FechaCreacion, Activo) 
+VALUES 
+('Admin', 'Administrador del sistema', GETDATE(), 1),
+('User', 'Usuario estándar', GETDATE(), 1);
+
+-- Insertar Usuario Admin (password: PostLtda2025)
+INSERT INTO Usuarios (Id, NombreUsuario, Contraseña, Nombre, Apellido, Email, RolId, Activo, FechaCreacion)
+VALUES (NEWID(), 'admin', '2AD1859D15A23E83EC3FC7CE69810375BBFF20224FD418CFFEAF45BC6B4F4E4C', 'Administrador', 'Sistema', 'admin@projectapi.com', 1, 1, GETDATE());
+
+SELECT * FROM Logs

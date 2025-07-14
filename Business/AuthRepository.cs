@@ -23,10 +23,7 @@ namespace Business
         }
 
         public async Task<RespuestaDto> AutenticarAsync(LoginDto loginDto)
-        {
-            // Validar acceso de sitio
-            if (!await ValidarAccesoAsync(loginDto.Sitio, loginDto.Clave))
-                return RespuestaDto.ParametrosIncorrectos("Acceso denegado", "Sitio o clave incorrectos");
+        {         
 
             // Obtener usuario
             var contraseñaHash = GetSHA256Hash(loginDto.Contraseña);
