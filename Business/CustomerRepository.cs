@@ -39,6 +39,15 @@ namespace Business
         {
             try
             {
+                // Verificar si ya existe un customer con el mismo nombre
+                bool existeNombre = await _context.Customer.AnyAsync(c => c.Name == customerDto.Name);
+                if (existeNombre)
+                {
+                    return RespuestaDto.ParametrosIncorrectos(
+                        "Nombre duplicado", 
+                        $"Ya existe un customer con el nombre '{customerDto.Name}'");
+                }
+
                 var customer = Mapping.Convertir<CustomerCreateDto, Customer>(customerDto);
                 var resultado = _baseModel.Create(customer);
 
