@@ -37,6 +37,7 @@ builder.Services.AddScoped<BaseModel<DataAccess.Data.Post>, BaseModel<DataAccess
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
+builder.Services.AddScoped<IPostRepository, PostRepository>(); // ← NUEVA LÍNEA
 
 // Attributes
 builder.Services.AddScoped<JwtAuthorizationAttribute>();
@@ -79,13 +80,13 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo 
-    { 
-        Title = "API V1", 
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "API V1",
         Version = "v1",
         Description = "API de la compañía Post Ltda"
     });
-    
+
     // Configuración para documentar los headers requeridos
     c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
     {
@@ -101,7 +102,7 @@ builder.Services.AddSwaggerGen(c =>
             new string[] {}
         }
     });
-    
+
     c.AddSecurityDefinition("ApiKey", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
         Description = "Headers de autenticación API. Ejemplo: 'Sitio: nombre-sitio' y 'Clave: clave-acceso'",
@@ -109,7 +110,7 @@ builder.Services.AddSwaggerGen(c =>
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
         Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey
     });
-    
+
     // Agregar comentarios XML para la documentación de la API
     var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, xmlFile);
@@ -128,7 +129,7 @@ try
     if (app.Environment.IsDevelopment())
     {
         app.UseSwagger();
-        app.UseSwaggerUI(c => 
+        app.UseSwaggerUI(c =>
         {
             c.SwaggerEndpoint("/swagger/v1/swagger.json", "API V1");
             c.RoutePrefix = string.Empty; // Esto hace que Swagger esté en la ruta raíz

@@ -95,8 +95,21 @@ namespace Business
                 if (customer == null)
                     return RespuestaDto.NoEncontrado("Customer");
 
+                // NUEVO: Eliminar todos los Posts asociados antes de eliminar el Customer
+                var postsAsociados = await _context.Post.Where(p => p.CustomerId == id).ToListAsync();
+
+                if (postsAsociados.Any())
+                {
+                    _context.Post.RemoveRange(postsAsociados);
+                    await _context.SaveChangesAsync();
+                }
+
+                // Proceder con la eliminación del Customer
                 _baseModel.Delete(customer);
-                return RespuestaDto.Exitoso("Customer eliminado", $"Customer '{customer.Name}' eliminado exitosamente");
+
+                return RespuestaDto.Exitoso(
+                    "Customer eliminado",
+                    $"Customer '{customer.Name}' y {postsAsociados.Count} posts asociados eliminados exitosamente");
             }
             catch (Exception ex)
             {

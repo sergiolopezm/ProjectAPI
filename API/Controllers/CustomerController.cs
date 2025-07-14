@@ -14,6 +14,7 @@ namespace API.Controllers.Customer
 {
     [Route("api/[controller]")]
     [ApiController]
+    [JwtAuthorization]
     [ServiceFilter(typeof(AccesoAttribute))]
     [ServiceFilter(typeof(LogAttribute))]
     [ServiceFilter(typeof(ExceptionAttribute))]
